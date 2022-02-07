@@ -1,0 +1,74 @@
+---
+title: "draft"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars}
+library(opendatatoronto)
+library(dplyr)
+
+
+# get package
+package <- show_package("4db2d9d9-6590-41e6-bf2b-b9188436d044")
+package
+
+# get all resources for this package
+resources <- list_package_resources("4db2d9d9-6590-41e6-bf2b-b9188436d044")
+
+# identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
+datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+
+# load the first datastore resource as a sample
+data <- filter(datastore_resources, row_number()==1) %>% get_resource()
+data
+
+library(tidyverse)
+library(janitor)
+library(tidyr)
+library(knitr)
+
+cleaned_data <- clean_names(data)
+
+cleaned_data <- cleaned_data %>% drop_na(neighbourhood)
+
+cleaned_data <- 
+  cleaned_data |> 
+  select(neighbourhood
+  )
+
+counted_data <- 
+  cleaned_data |> 
+  count(neighbourhood)
+
+counted_data <- 
+  counted_data |> 
+  separate(col = neighbourhood,
+           into = c('neighbourhood', 'numeric'),
+           sep = ', ') |> 
+  select(-numeric)
+
+counted_data |> 
+  ggplot(mapping = aes(x = neighbourhood, y = n, fill = n)) +
+  geom_bar(stat="identity") + 
+  labs(title = "Substance Use Treatment in Toronto Neighbourhoods", 
+       x = "Neighbourhood Name", 
+       y = "Agency Count") + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)
+  )
+
+
+table <- counted_data |>
+  kable(caption = "Substance Use Treatment in Toronto Neighbourhoods", 
+        col.names = c("Neighbourhood Name", "Agency Count"),
+        digits = 1,
+        booktabs = TRUE,
+        linesep = "")
+table
+
+```
+
